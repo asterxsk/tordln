@@ -1,0 +1,17 @@
+# Rust build output
+/target/
+
+# Node
+node_modules/
+
+# Built npm binaries (copied in by build-npm.ps1)
+/npm/tordln-win32-x64/tordln.exe
+/npm/tordln-linux-x64/tordln
+/npm/tordln/node_modules/
+
+# Session/agent junk
+.grok/
+
+# OS
+Thumbs.db
+.DS_Store

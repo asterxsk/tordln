@@ -1,0 +1,63 @@
+/* tordln design tokens — Hallmark Terminal genre
+ * paper: near-black · accent: purple · radius: 0 · mono-only
+ */
+
+:root {
+  /* Paper */
+  --color-paper: rgb(10, 10, 12);
+  --color-paper-raised: rgb(18, 18, 22);
+  --color-paper-sunken: rgb(6, 6, 8);
+
+  /* Text */
+  --color-text: rgb(235, 235, 240);
+  --color-text-dim: rgb(140, 140, 150);
+  --color-text-faint: rgb(90, 90, 100);
+
+  /* Accent — purple */
+  --color-accent: rgb(160, 120, 255);
+  --color-accent-dim: rgb(110, 80, 190);
+
+  /* Borders — hairline dim grey */
+  --color-border: rgb(50, 50, 60);
+  --color-border-focus: rgb(160, 120, 255);
+
+  /* State */
+  --color-state-live: rgb(235, 235, 240);
+  --color-state-finished: rgb(160, 120, 255);
+  --color-state-error: rgb(200, 80, 80);
+  --color-state-paused: rgb(140, 140, 150);
+
+  /* Progress fills */
+  --color-progress-done: rgb(160, 120, 255);
+  --color-progress-pending: rgb(50, 50, 60);
+
+  /* Typography — mono only */
+  --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-lg: 15px;
+  --text-xl: 18px;
+
+  /* Spacing — 4pt scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+
+  /* Radius — sharp only */
+  --radius: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+
+  /* Focus ring */
+  --focus-ring: 1px solid rgb(160, 120, 255);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 80ms;
+  --dur-base: 140ms;
+}

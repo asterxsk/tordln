@@ -1,0 +1,11 @@
+{
+  "name": "tordln-dev",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dev script host for tordln (Rust TUI).",
+  "scripts": {
+    "dev": "cargo build && node scripts/run.js",
+    "build:release": "cargo build --release",
+    "pack:npm": "powershell -ExecutionPolicy Bypass -File npm/build-npm.ps1"
+  }
+}

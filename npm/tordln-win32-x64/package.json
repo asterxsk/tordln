@@ -1,0 +1,13 @@
+{
+  "name": "tordln-win32-x64",
+  "version": "0.1.0",
+  "description": "Windows x64 binary for tordln",
+  "os": ["win32"],
+  "cpu": ["x64"],
+  "files": ["tordln.exe"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asterxsk/tordln"
+  }
+}

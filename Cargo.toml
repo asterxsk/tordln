@@ -1,0 +1,25 @@
+[package]
+name = "tordln"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ratatui = "0.29"
+crossterm = { version = "0.28", features = ["event-stream"] }
+tokio = { version = "1", features = ["full"] }
+librqbit = "8"
+arboard = "3"
+notify = "6"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+anyhow = "1"
+
+[profile.release]
+opt-level = 3
+lto = true
+
+# Vendored fork of librqbit 8.1.1 exposing file-selection + piece-map APIs.
+# Patched: ManagedTorrent::update_only_files/with_chunk_tracker made public,
+# Session::update_only_files + ChunkTracker piece-map accessors added.
+[patch.crates-io]
+librqbit = { path = "vendor/librqbit" }

@@ -1,0 +1,31 @@
+{
+  "name": "tordln",
+  "version": "0.1.0",
+  "description": "Terminal UI torrent download manager (rqbit/librqbit engine). Run with: npx tordln",
+  "bin": {
+    "tordln": "./bin/tordln.mjs"
+  },
+  "files": [
+    "bin/tordln.mjs",
+    "README.md"
+  ],
+  "optionalDependencies": {
+    "tordln-win32-x64": "0.1.0",
+    "tordln-linux-x64": "0.1.0"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "os": [
+    "win32",
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asterxsk/tordln"
+  }
+}

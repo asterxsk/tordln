@@ -1,0 +1,4 @@
+# Built binaries (copied in by build-npm.ps1 / CI). Never commit.
+tordn.exe
+tordn
+node_modules/
