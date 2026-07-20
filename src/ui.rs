@@ -140,24 +140,36 @@ impl App {
         // Footer: hint + controls (bottom of screen).
         let controls = match self.sidebar_mode {
             SidebarMode::Home => {
-                " paste a magnet · drop a .torrent · or set a watch folder   |   [P] paste  [N] new  ↑/↓ pick  Enter start  Esc back "
+                "paste a magnet · drop .torrent · set watch folder  |  [P] paste [N] new ↑/↓ Enter Esc"
             }
             SidebarMode::Active => {
-                " paste a magnet · drop a .torrent · or set a watch folder   |   ↑/↓ select  [R] remove  [D] delete  Space toggle file  Enter detail "
+                "paste a magnet · drop .torrent · set watch folder  |  ↑/↓ [R] [D] Space Enter"
             }
             SidebarMode::Finished => {
-                " paste a magnet · drop a .torrent · or set a watch folder   |   ↑/↓ select  [D] delete  [T] remove .torrent "
+                "paste a magnet · drop .torrent · set watch folder  |  ↑/↓ [D] [T]"
             }
             SidebarMode::Settings => {
-                " paste a magnet · drop a .torrent · or set a watch folder   |   ↑/↓ select  Space toggle  [E] edit  Enter save  Esc cancel "
+                "paste a magnet · drop .torrent · set watch folder  |  ↑/↓ Space [E] Enter Esc"
             }
         };
+        // Footer shares the same centered content column as the Home box so
+        // they line up regardless of terminal width.
+        let footer_w = layout[2].width.min(56);
+        let footer_col = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Min(0),
+                Constraint::Length(footer_w),
+                Constraint::Min(0),
+            ])
+            .split(layout[2])[1];
         f.render_widget(
             Paragraph::new(Line::from(Span::styled(
                 controls,
                 Style::default().fg(dim),
-            ))),
-            layout[2],
+            )))
+            .alignment(ratatui::layout::Alignment::Center),
+            footer_col,
         );
 
         // Home: popup listing discovered .torrent files in download_dir.
@@ -177,15 +189,16 @@ impl App {
         border: Style,
     ) {
         let banner = [
-            " _____  ____  ____  _   _  _   _  _  _  ",
-            "|_   _||  _ \\|  _ \\| | | || \\| || \\| | ",
-            "  | |  | |_) | | | | | | ||  \\  |  \\  | ",
-            "  | |  |  _ <| |_| | |_| || |\\  | |\\  | ",
-            "  |_|  |_| \\_\\\\____|\\___/ |_| \\_|_| \\_| ",
+            "████████╗ ██████╗ ██████╗ ██████╗ ██╗     ███╗   ██╗",
+            "╚══██╔══╝██╔═══██╗██╔══██╗██╔══██╗██║     ████╗  ██║",
+            "   ██║   ██║   ██║██████╔╝██║  ██║██║     ██╔██╗ ██║",
+            "   ██║   ██║   ██║██╔══██╗██║  ██║██║     ██║╚██╗██║",
+            "   ██║   ╚██████╔╝██║  ██║██████╔╝███████╗██║ ╚████║",
+            "   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═══╝",
         ];
         // Vertically center the group via top/bottom Min(0) spacers in `chunks`.
         // Horizontally center the content column.
-        let width = area.width.min(52);
+        let width = area.width.min(56);
         let hchunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
@@ -201,7 +214,7 @@ impl App {
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Min(0),    // top spacer
-                Constraint::Length(15), // group: banner + tagline + actions
+                Constraint::Length(14), // group: banner + tagline + actions
                 Constraint::Min(0),    // bottom spacer
             ])
             .split(content);
@@ -210,7 +223,7 @@ impl App {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(7), // banner
+                Constraint::Length(6), // banner
                 Constraint::Length(1), // tagline
                 Constraint::Length(7), // actions block
             ])
