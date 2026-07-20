@@ -34,7 +34,6 @@ pub struct App {
     pub selected: usize,
     pub sidebar_mode: SidebarMode,
     pub focus: Focus,
-    pub status: String,
     pub details: Option<TorrentDetails>,
     pub detail_file_focus: usize,
     pub settings_focus: usize,
@@ -54,7 +53,6 @@ impl App {
             selected: 0,
             sidebar_mode: SidebarMode::Home,
             focus: Focus::Right,
-            status: "ready".into(),
             details: None,
             detail_file_focus: 0,
             settings_focus: 0,
@@ -88,32 +86,19 @@ impl App {
         // ONLY its internal divider edges, so there are no doubled/stacked lines.
         let outer_block = Block::default()
             .borders(Borders::ALL)
-            .border_style(border)
-            .title(Span::styled(
-                " tordln · TORRENT DOWNLOAD MANAGER ",
-                Style::default().fg(text),
-            ));
+            .border_style(border);
         let area = outer_block.inner(f.area());
         f.render_widget(outer_block, f.area());
 
-        // Inside the frame: header / body / status.
+        // Inside the frame: header / body / footer.
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(1), // header
                 Constraint::Min(5),    // body
-                Constraint::Length(1), // status
+                Constraint::Length(1), // footer
             ])
             .split(area);
-
-        // Header: title text only (no block — outer frame supplies the edge).
-        f.render_widget(
-            Paragraph::new(Line::from(Span::styled(
-                "  paste a magnet · drop a .torrent · or set a watch folder",
-                Style::default().fg(dim),
-            ))),
-            layout[0],
-        );
 
         // Body horizontal: sidebar / right.
         let body = Layout::default()
@@ -152,9 +137,26 @@ impl App {
             self.draw_sidebar(f, body[0], accent, dim, border);
         }
 
-        // Status: single text line (outer frame supplies the bottom edge).
+        // Footer: hint + controls (bottom of screen).
+        let controls = match self.sidebar_mode {
+            SidebarMode::Home => {
+                " paste a magnet · drop a .torrent · or set a watch folder   |   [P] paste  [N] new  ↑/↓ pick  Enter start  Esc back "
+            }
+            SidebarMode::Active => {
+                " paste a magnet · drop a .torrent · or set a watch folder   |   ↑/↓ select  [R] remove  [D] delete  Space toggle file  Enter detail "
+            }
+            SidebarMode::Finished => {
+                " paste a magnet · drop a .torrent · or set a watch folder   |   ↑/↓ select  [D] delete  [T] remove .torrent "
+            }
+            SidebarMode::Settings => {
+                " paste a magnet · drop a .torrent · or set a watch folder   |   ↑/↓ select  Space toggle  [E] edit  Enter save  Esc cancel "
+            }
+        };
         f.render_widget(
-            Paragraph::new(Line::from(Span::raw(&self.status))),
+            Paragraph::new(Line::from(Span::styled(
+                controls,
+                Style::default().fg(dim),
+            ))),
             layout[2],
         );
 
@@ -181,15 +183,38 @@ impl App {
             "  | |  |  _ <| |_| | |_| || |\\  | |\\  | ",
             "  |_|  |_| \\_\\\\____|\\___/ |_| \\_|_| \\_| ",
         ];
-        let inner = area;
+        // Vertically center the group via top/bottom Min(0) spacers in `chunks`.
+        // Horizontally center the content column.
+        let width = area.width.min(52);
+        let hchunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Min(0),       // left spacer
+                Constraint::Length(width), // content
+                Constraint::Min(0),       // right spacer
+            ])
+            .split(area);
+        let content = hchunks[1];
+
+        // Vertically center the group inside the content column.
+        let vchunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Min(0),    // top spacer
+                Constraint::Length(15), // group: banner + tagline + actions
+                Constraint::Min(0),    // bottom spacer
+            ])
+            .split(content);
+        let group = vchunks[1];
+
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(7), // banner
-                Constraint::Min(4),    // spacer / actions
+                Constraint::Length(1), // tagline
                 Constraint::Length(7), // actions block
             ])
-            .split(inner);
+            .split(group);
 
         // Banner (purple, centered).
         let banner_lines: Vec<Line> = banner
@@ -229,10 +254,6 @@ impl App {
             )),
             Line::from(Span::styled(
                 " drop a .torrent file or paste a magnet to begin ",
-                Style::default().fg(dim),
-            )),
-            Line::from(Span::styled(
-                " 1 Home · 2 Active · 3 Finished · 4 Settings ",
                 Style::default().fg(dim),
             )),
         ];

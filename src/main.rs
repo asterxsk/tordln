@@ -44,7 +44,6 @@ async fn main() -> Result<()> {
     }
 
     let mut app = App::new(settings);
-    app.status = "engine online".into();
 
     // Boot: scan download_dir for .torrent files -> Home popup.
     app.home_found_files = scan_dir_for_torrents(&app.settings.download_dir);
@@ -92,7 +91,6 @@ async fn main() -> Result<()> {
         if add_modal.is_none() {
             if let Some(p) = pending.take() {
                 let m = modal::AddModal::new(&app.settings.download_dir, Vec::new());
-                app.status = "new torrent: configure and confirm".into();
                 add_modal = Some((m, p));
             }
         }
@@ -101,7 +99,7 @@ async fn main() -> Result<()> {
         if add_modal.is_none() {
             while let Ok(p) = rx.try_recv() {
                 match p {
-                    Pickup::Status(s) => app.status = s,
+                    Pickup::Status(_s) => {}
                     Pickup::Url(u) if is_torrent_source(&u) => {
                         if app.settings.clipboard_watch {
                             pending = Some(Pending::Url(u.trim().to_string()));
@@ -149,13 +147,9 @@ async fn main() -> Result<()> {
                             Pending::Url(u) => engine.add_url(u).await,
                             Pending::File(fl) => engine.add_file(fl).await,
                         };
-                        app.status = match res {
-                            Ok(()) => "torrent added".into(),
-                            Err(e) => format!("add error: {e}"),
-                        };
+                        let _ = res; // result surfaced via torrent list / errors
                     } else if m.cancelled {
                         add_modal = None;
-                        app.status = "cancelled".into();
                     }
                     continue;
                 }
@@ -303,19 +297,14 @@ async fn handle_app_key(
             let name = app.home_found_files[app.home_file_focus].clone();
             let path = format!("{}/{}", app.settings.download_dir, name);
             *pending = Some(Pending::File(path));
-            app.status = format!("adding {}", name);
         }
         // Home: paste magnet from clipboard.
         KeyCode::Char('p') | KeyCode::Char('P') if app.sidebar_mode == SidebarMode::Home => {
             if let Some(link) = read_clipboard_link() {
                 if is_torrent_source(&link) {
                     *pending = Some(Pending::Url(link.trim().to_string()));
-                    app.status = "pasted link from clipboard".into();
-                } else {
-                    app.status = "clipboard has no magnet/.torrent link".into();
                 }
-            } else {
-                app.status = "clipboard unavailable".into();
+                // (feedback previously shown in the corner status bar)
             }
         }
         // Home: new download — open the pre-download modal with the clipboard
@@ -325,12 +314,7 @@ async fn handle_app_key(
             if let Some(link) = read_clipboard_link() {
                 if is_torrent_source(&link) {
                     *pending = Some(Pending::Url(link.trim().to_string()));
-                    app.status = "new download from clipboard link".into();
-                } else {
-                    app.status = "clipboard has no magnet/.torrent link".into();
                 }
-            } else {
-                app.status = "clipboard unavailable — copy a magnet link first".into();
             }
         }
         // Active row actions.
@@ -341,7 +325,6 @@ async fn handle_app_key(
                     .session
                     .delete(librqbit::api::TorrentIdOrHash::Id(t.id), false)
                     .await;
-                app.status = format!("removed {}", t.name);
             }
         }
         KeyCode::Char('d') if app.sidebar_mode == SidebarMode::Active => {
@@ -351,7 +334,6 @@ async fn handle_app_key(
                     .session
                     .delete(librqbit::api::TorrentIdOrHash::Id(t.id), true)
                     .await;
-                app.status = format!("deleted {}", t.name);
             }
         }
         // Finished row actions.
@@ -361,7 +343,6 @@ async fn handle_app_key(
                     .session
                     .delete(librqbit::api::TorrentIdOrHash::Id(t.id), true)
                     .await;
-                app.status = format!("deleted {}", t.name);
             }
         }
         KeyCode::Char('t') if app.sidebar_mode == SidebarMode::Finished => {
@@ -371,7 +352,6 @@ async fn handle_app_key(
                     .session
                     .delete(librqbit::api::TorrentIdOrHash::Id(t.id), false)
                     .await;
-                app.status = format!("removed .torrent {}", t.name);
             }
         }
         // Settings editing (only when Settings mode + Right focus).
@@ -379,7 +359,6 @@ async fn handle_app_key(
             if app.settings_focus == 2 {
                 app.settings.clipboard_watch = !app.settings.clipboard_watch;
                 let _ = config::save(&app.settings);
-                app.status = format!("clipboard_watch = {}", app.settings.clipboard_watch);
             } else if app.settings_focus == 1 {
                 // Toggle watch folder on/off: clear or set to default Downloads/tordln-watch.
                 if app.settings.watch_folder.is_some() {
@@ -389,7 +368,6 @@ async fn handle_app_key(
                     app.settings.watch_folder = Some(format!("{home}/Downloads/tordln-watch"));
                 }
                 let _ = config::save(&app.settings);
-                app.status = "settings saved".into();
             }
         }
         KeyCode::Char('e') if app.sidebar_mode == SidebarMode::Settings && app.focus == Focus::Right && app.settings_editing.is_none() => {
@@ -409,7 +387,6 @@ async fn handle_app_key(
                 app.settings_editing = None;
             }
             let _ = config::save(&app.settings);
-            app.status = "settings saved".into();
         }
         KeyCode::Esc if app.sidebar_mode == SidebarMode::Settings => {
             app.settings_editing = None;
@@ -451,10 +428,7 @@ async fn handle_app_key(
         KeyCode::Char(' ') if app.sidebar_mode == SidebarMode::Active => {
             if let Some(t) = current_selected(app) {
                 let idx = app.detail_file_focus;
-                match engine.set_file_selected(t.id, idx, true).await {
-                    Ok(()) => app.status = format!("selected file {} of {}", idx, t.name),
-                    Err(e) => app.status = format!("file select error: {e}"),
-                }
+                let _ = engine.set_file_selected(t.id, idx, true).await;
             }
         }
         _ => {}
