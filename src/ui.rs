@@ -137,21 +137,16 @@ impl App {
             self.draw_sidebar(f, body[0], accent, dim, border);
         }
 
-        // Footer: hint + controls (bottom of screen).
-        let controls = match self.sidebar_mode {
-            SidebarMode::Home => {
-                "paste a magnet · drop .torrent · set watch folder  |  [P] paste [N] new ↑/↓ Enter Esc"
-            }
-            SidebarMode::Active => {
-                "paste a magnet · drop .torrent · set watch folder  |  ↑/↓ [R] [D] Space Enter"
-            }
-            SidebarMode::Finished => {
-                "paste a magnet · drop .torrent · set watch folder  |  ↑/↓ [D] [T]"
-            }
-            SidebarMode::Settings => {
-                "paste a magnet · drop .torrent · set watch folder  |  ↑/↓ Space [E] Enter Esc"
-            }
+        // Footer: global keybinding legend (bottom of screen).
+        let legend_mode = match self.sidebar_mode {
+            SidebarMode::Home => "p paste  n new  enter start",
+            SidebarMode::Active => "r remove  d delete  space file",
+            SidebarMode::Finished => "d delete  t remove .torrent",
+            SidebarMode::Settings => "space=toggle  type=edit  enter=save",
         };
+        let controls = format!(
+            "1 Home  2 Active  3 Finished  4 Settings  ↑/↓ nav  Tab focus  q quit  |  {legend_mode}"
+        );
         // Footer shares the same centered content column as the Home box so
         // they line up regardless of terminal width.
         let footer_w = layout[2].width.min(56);
@@ -674,6 +669,7 @@ pub fn init_terminal() -> anyhow::Result<Term> {
     crossterm::terminal::enable_raw_mode()?;
     let mut out = io::stdout();
     crossterm::execute!(out, crossterm::terminal::EnterAlternateScreen)?;
+    crossterm::execute!(out, crossterm::event::EnableMouseCapture)?;
     let backend = CrosstermBackend::new(out);
     let term = Terminal::new(backend)?;
     Ok(term)
@@ -681,6 +677,7 @@ pub fn init_terminal() -> anyhow::Result<Term> {
 
 pub fn restore_terminal() -> anyhow::Result<()> {
     crossterm::terminal::disable_raw_mode()?;
+    crossterm::execute!(io::stdout(), crossterm::event::DisableMouseCapture)?;
     crossterm::execute!(io::stdout(), crossterm::terminal::LeaveAlternateScreen)?;
     Ok(())
 }

@@ -7,7 +7,7 @@ mod ui;
 use std::sync::Arc;
 
 use anyhow::Result;
-use crossterm::event::{self, Event, KeyCode, MouseEventKind};
+use crossterm::event::{self, Event, KeyCode, KeyEventKind, MouseEventKind};
 use ratatui::widgets::Clear;
 use tokio::sync::mpsc;
 
@@ -134,6 +134,9 @@ async fn main() -> Result<()> {
 
         match event::read()? {
             Event::Key(key) => {
+                if key.kind == KeyEventKind::Release {
+                    continue;
+                }
                 if let Some((m, _src)) = add_modal.as_mut() {
                     m.handle_key(key);
                     if m.confirmed {
@@ -153,7 +156,9 @@ async fn main() -> Result<()> {
                     }
                     continue;
                 }
-                handle_app_key(&mut app, key, &engine, &mut pending).await;
+                if handle_app_key(&mut app, key, &engine, &mut pending).await {
+                    break;
+                }
             }
             Event::Mouse(me) => {
                 if add_modal.is_some() {
@@ -171,7 +176,7 @@ async fn main() -> Result<()> {
                         };
                     } else {
                         app.focus = Focus::Right;
-                        let row = me.row.saturating_sub(4) as usize;
+                        let row = me.row.saturating_sub(3) as usize;
                         if row < current_list_len(&app) {
                             app.selected = row;
                         }
@@ -181,6 +186,15 @@ async fn main() -> Result<()> {
             _ => {}
         }
     }
+
+    // Clean exit: leave alt screen, clear the underlying terminal.
+    ui::restore_terminal()?;
+    crossterm::execute!(
+        std::io::stdout(),
+        crossterm::terminal::Clear(crossterm::terminal::ClearType::All),
+        crossterm::cursor::MoveTo(0, 0),
+    )?;
+    Ok(())
 }
 
 fn current_selected(app: &App) -> Option<engine::TorrentInfo> {
@@ -232,9 +246,9 @@ async fn handle_app_key(
     key: crossterm::event::KeyEvent,
     engine: &Engine,
     pending: &mut Option<Pending>,
-) {
+) -> bool {
     match key.code {
-        KeyCode::Char('q') => std::process::exit(0),
+        KeyCode::Char('q') => return true,
         KeyCode::Char('1') => {
             app.sidebar_mode = SidebarMode::Home;
             app.selected = 0;
@@ -433,4 +447,5 @@ async fn handle_app_key(
         }
         _ => {}
     }
+    false
 }
